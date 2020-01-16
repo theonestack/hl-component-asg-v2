@@ -21,7 +21,7 @@ CfhighlanderTemplate do
 
     ComponentParam 'Spot', 'false', allowedValues: ['true','false']
 
-    ComponentParam 'Subnets', type: 'CommaDelimitedList'
+    ComponentParam 'SubnetIds', type: 'CommaDelimitedList'
 
     ComponentParam 'AsgDesired', '1'
     ComponentParam 'AsgMin', '1'
