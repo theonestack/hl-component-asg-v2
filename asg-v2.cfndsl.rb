@@ -25,11 +25,14 @@ CloudFormation do
     Value(Ref(:SecurityGroupAsg))
     Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-SecurityGroup")
   }
+
+  managed_iam_policies = external_parameters.fetch(:managed_iam_policies, [])
   
   IAM_Role(:Role) {
     Path '/'
     AssumeRolePolicyDocument service_assume_role_policy('ec2')
     Policies iam_role_policies(external_parameters[:iam_policies])
+    ManagedPolicyArns managed_iam_policies if managed_iam_policies.any?
     Tags asg_tags
     Metadata({
       cfn_nag: {
