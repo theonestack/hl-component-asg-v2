@@ -18,8 +18,12 @@ CloudFormation do
     if security_group_rules.any?
       SecurityGroupIngress generate_security_group_rules(security_group_rules,ip_blocks)
     end
-    
     Tags asg_tags
+  }
+
+  Output(:SecurityGroupAsg) {
+    Value(Ref(:SecurityGroup))
+    Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-SecurityGroup")
   }
   
   IAM_Role(:Role) {
