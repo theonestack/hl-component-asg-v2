@@ -1,7 +1,15 @@
 
 public_address: false
 
-health_check_grace_period: 500
+asg_update_policy:
+  min: 0
+  batch_size: 1
+  suspend:
+    - HealthCheck
+    - ReplaceUnhealthy
+    - AZRebalance
+    - AlarmNotification
+    - ScheduledActions
 
 iam_policies:
   loadbalancer-manage:
@@ -28,3 +36,11 @@ windows_user_data: |
   $instanceId = invoke-restmethod -uri http://169.254.169.254/latest/meta-data/instance-id
   cfn-signal.exe -e $lastexitcode --region ", Ref("AWS::Region") ," --stack ", Ref("AWS::StackName") ," --resource 'AutoScaleGroup'
   </powershell>
+
+## Exectued in the order provided
+termination_policies:
+  - Default
+  # - OldestInstance
+  # - NewestInstance
+  # - OldestLaunchConfiguration
+  # - ClosestToNextInstanceHour

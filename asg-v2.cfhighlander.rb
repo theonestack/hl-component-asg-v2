@@ -26,6 +26,14 @@ CfhighlanderTemplate do
     ComponentParam 'AsgDesired', '1'
     ComponentParam 'AsgMin', '1'
     ComponentParam 'AsgMax', '2'
+    ComponentParam 'EnableScaling', 'false', allowedValues: ['true','false']
+
+    ComponentParam 'HealthCheckType', 'EC2', allowedValues: ['EC2','ELB'] 
+    ComponentParam 'HealthCheckGracePeriod', '500'
+
+    targetgroups.each do |tg|
+      ComponentParam tg
+    end if defined? targetgroups
 
   end
 

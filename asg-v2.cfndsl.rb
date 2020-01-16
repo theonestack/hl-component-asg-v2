@@ -81,15 +81,23 @@ CloudFormation do
     LaunchTemplateData(template_data)
   }
 
-    lanuch_asg_tags = asg_tags.map(&:clone)
+  lanuch_asg_tags = asg_tags.map(&:clone)
+  asg_targetgroups = []
+  targetgroups = external_parameters.fetch(:targetgroups, [])
+  targetgroups.each {|tg| asg_targetgroups << Ref(tg)}
+  asg_update_policy = external_parameters[:asg_update_policy]
+  cool_down = external_parameters.fetch(:cool_down, nil)
 
   AutoScaling_AutoScalingGroup(:AutoScaleGroup) {
-    UpdatePolicy(:AutoScalingReplacingUpdate, {
-      WillReplace: true
+    UpdatePolicy(:AutoScalingRollingUpdate, {
+      "MinInstancesInService" => asg_update_policy['min'],
+      "MaxBatchSize"          => asg_update_policy['batch_size'],
+      "SuspendProcesses"      => asg_update_policy['suspend']
     })
     UpdatePolicy(:AutoScalingScheduledAction, {
       IgnoreUnmodifiedGroupSizeProperties: true
     })
+    Cooldown cool_down unless cool_down.nil?
     DesiredCapacity Ref(:AsgDesired)
     MinSize Ref(:AsgMin)
     MaxSize Ref(:AsgMax)
@@ -98,6 +106,10 @@ CloudFormation do
       LaunchTemplateId: Ref(:LaunchTemplate),
       Version: FnGetAtt(:LaunchTemplate, :LatestVersionNumber)
     })
+    TargetGroupARNs asg_targetgroups if asg_targetgroups.any?
+    HealthCheckGracePeriod Ref('HealthCheckGracePeriod')
+    HealthCheckType Ref('HealthCheckType')
+    TerminationPolicies external_parameters[:termination_policies]
     Tags lanuch_asg_tags.each {|tag| tag[:PropagateAtLaunch]=false}
   }
     

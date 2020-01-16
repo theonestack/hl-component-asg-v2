@@ -4,11 +4,11 @@ describe 'compiled component' do
   
   context 'cftest' do
     it 'compiles test' do
-      expect(system("cfhighlander cftest #{@validate} --tests tests/default.test.yaml")).to be_truthy
+      expect(system("cfhighlander cftest #{@validate} --tests tests/targetgroups.test.yaml")).to be_truthy
     end      
   end
   
-  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/default/asg-v2.compiled.yaml") }
+  let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/targetgroups/asg-v2.compiled.yaml") }
 
   context 'Resource SecurityGroupAsg' do
 
@@ -115,6 +115,21 @@ describe 'compiled component' do
         {"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}, "PropagateAtLaunch"=>false}, 
         {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}, "PropagateAtLaunch"=>false}, 
         {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}, "PropagateAtLaunch"=>false}])
+    end
+
+  end
+
+  context 'Target Groups' do
+    let(:properties) { template["Resources"]["AutoScaleGroup"]["Properties"] }
+    let(:parameters) { template["Parameters"] }
+
+    it 'has property TargetGroupARNs' do
+      expect(properties["TargetGroupARNs"]).to eq([{"Ref"=>"defaultTG"}, {"Ref"=>"myappTG"}])
+    end
+
+    it 'has targetgroup stack parameters' do
+      expect(parameters['defaultTG']).to eq({"Type" => 'String', 'Default' => '', 'NoEcho' => false})
+      expect(parameters['myappTG']).to eq({"Type" => 'String', 'Default' => '', 'NoEcho' => false})
     end
 
   end

@@ -102,7 +102,7 @@ describe 'compiled component' do
     end
 
     it 'has property VPCZoneIdentifier' do
-      expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"Subnets"})
+      expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
     end
 
     it 'has property LaunchTemplate' do
