@@ -21,8 +21,8 @@ CloudFormation do
     Tags asg_tags
   }
 
-  Output(:SecurityGroupAsg) {
-    Value(Ref(:SecurityGroup))
+  Output(:SecurityGroup) {
+    Value(Ref(:SecurityGroupAsg))
     Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-SecurityGroup")
   }
   
