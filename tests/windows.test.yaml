@@ -1,0 +1,7 @@
+test_metadata:
+  type: config
+  name: windows
+  description: windows test
+
+# Insert your tests here
+operating_system: windows
