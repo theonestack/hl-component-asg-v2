@@ -1,6 +1,4 @@
 CfhighlanderTemplate do
-  Name 'asg-v2'
-  Description "asg-v2 - #{component_version}"
 
   DependsOn 'lib-iam@0.1.0'
   DependsOn 'lib-ec2@0.1.0'
