@@ -1,5 +1,7 @@
 CloudFormation do
   
+  export = external_parameters.fetch(:export_name, external_parameters[:component_name])
+
   asg_tags = []
   asg_tags << { Key: 'Name', Value: FnSub("${EnvironmentName}-#{external_parameters[:component_name]}") }
   asg_tags << { Key: 'Environment', Value: Ref(:EnvironmentName) }
@@ -10,21 +12,35 @@ CloudFormation do
     
   ip_blocks = external_parameters.fetch(:ip_blocks, {})
   security_group_rules = external_parameters.fetch(:security_group_rules, [])
-  
-  EC2_SecurityGroup(:SecurityGroupAsg) {
-    VpcId Ref(:VPCId)
-    GroupDescription FnSub("${EnvironmentName}-#{external_parameters[:component_name]}")
-    
-    if security_group_rules.any?
-      SecurityGroupIngress generate_security_group_rules(security_group_rules,ip_blocks)
-    end
-    Tags asg_tags
-  }
 
+  EC2_SecurityGroup(:SecurityGroupAsg) do
+    VpcId Ref('VPCId')
+    GroupDescription FnSub("${EnvironmentName}-#{external_parameters[:component_name]}")
+    Tags asg_tags
+    Metadata({
+      cfn_nag: {
+        rules_to_suppress: [
+          { id: 'F1000', reason: 'ignore egress for now' }
+        ]
+      }
+    })
+  end
   Output(:SecurityGroup) {
     Value(Ref(:SecurityGroupAsg))
-    Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-SecurityGroup")
+    Export FnSub("${EnvironmentName}-#{export}-SecurityGroup")
   }
+
+  ingress_rules = external_parameters.fetch(:ingress_rules, [])
+  ingress_rules.each_with_index do |ingress_rule, i|
+    EC2_SecurityGroupIngress("IngressRule#{i+1}") do
+      Description ingress_rule['desc'] if ingress_rule.has_key?('desc')
+      GroupId ingress_rule.has_key?('dest_sg') ? ingress_rule['dest_sg'] : Ref(:SecurityGroupAsg)
+      SourceSecurityGroupId ingress_rule.has_key?('source_sg') ? ingress_rule['source_sg'] :  Ref(:SecurityGroupAsg)
+      IpProtocol ingress_rule.has_key?('protocol') ? ingress_rule['protocol'] : 'tcp'
+      FromPort ingress_rule['from']
+      ToPort ingress_rule.has_key?('to') ? ingress_rule['to'] : ingress_rule['from']
+    end
+  end
 
   managed_iam_policies = external_parameters.fetch(:managed_iam_policies, [])
   
