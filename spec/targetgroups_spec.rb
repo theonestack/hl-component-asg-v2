@@ -102,9 +102,9 @@ describe 'compiled component' do
       expect(properties["MaxSize"]).to eq({"Ref"=>"AsgMax"})
     end
 
-    it 'has property VPCZoneIdentifier' do
-      expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
-    end
+    # it 'has property VPCZoneIdentifier' do
+    #   expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
+    # end
 
     it 'has property LaunchTemplate' do
       expect(properties["LaunchTemplate"]).to eq({"LaunchTemplateId"=>{"Ref"=>"LaunchTemplate"}, "Version"=>{"Fn::GetAtt"=>["LaunchTemplate", "LatestVersionNumber"]}})

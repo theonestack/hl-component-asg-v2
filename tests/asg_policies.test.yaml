@@ -1,0 +1,19 @@
+test_metadata:
+  type: config
+  name: asg_policies
+  description: custom ASG create and update asg_policies
+
+asg_create_policy:
+  min_successful: 50
+  count: 2
+  timeout: PT5M
+
+asg_update_policy:
+  min: 1
+  batch_size: 2
+  override_suspend:
+    - HealthCheck
+    - ReplaceUnhealthy
+    - AZRebalance
+  pause_time: PT20M
+  wait_on_signals: 'true'

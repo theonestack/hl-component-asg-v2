@@ -102,9 +102,9 @@ describe 'compiled component' do
       expect(properties["MaxSize"]).to eq({"Ref"=>"AsgMax"})
     end
 
-    it 'has property VPCZoneIdentifier' do
-      expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
-    end
+    # it 'has property VPCZoneIdentifier' do
+    #   expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
+    # end
 
     it 'has property LaunchTemplate' do
       expect(properties["LaunchTemplate"]).to eq({"LaunchTemplateId"=>{"Ref"=>"LaunchTemplate"}, "Version"=>{"Fn::GetAtt"=>["LaunchTemplate", "LatestVersionNumber"]}})
@@ -116,6 +116,31 @@ describe 'compiled component' do
         {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}, "PropagateAtLaunch"=>false}, 
         {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}, "PropagateAtLaunch"=>false}])
     end
+  end
+
+  context 'Resource AutoScaleGroup Polices' do
+
+    let(:asg) { template["Resources"]["AutoScaleGroup"] }
+
+      it 'has Creation Policy' do
+        expect(asg["CreationPolicy"]).to eq({
+          "AutoScalingCreationPolicy" => {"MinSuccessfulInstancesPercent"=>100},
+          "ResourceSignal" => {"Count"=>1, "Timeout"=>"PT10M"},
+        })
+      end
+
+      it 'has Update Policy' do
+        expect(asg["UpdatePolicy"]).to eq({
+          "AutoScalingRollingUpdate" => {
+            "MaxBatchSize"=>1, 
+            "MinInstancesInService"=>0, 
+            "PauseTime"=>"PT0", 
+            "SuspendProcesses"=>["HealthCheck", "ReplaceUnhealthy", "AZRebalance", "AlarmNotification", "ScheduledActions"],
+            "WaitOnResourceSignals"=>"false"
+          },
+          "AutoScalingScheduledAction" => {"IgnoreUnmodifiedGroupSizeProperties"=>true}
+        })
+      end
 
   end
 

@@ -1,6 +1,11 @@
 
 public_address: false
 
+asg_create_policy:
+  min_successful: 100
+  count: 1
+  timeout: PT10M
+
 asg_update_policy:
   min: 0
   batch_size: 1
@@ -10,6 +15,8 @@ asg_update_policy:
     - AZRebalance
     - AlarmNotification
     - ScheduledActions
+  pause_time: PT0
+  wait_on_signals: 'false'
 
 iam_policies:
   loadbalancer-manage:
