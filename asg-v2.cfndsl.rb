@@ -135,7 +135,7 @@ CloudFormation do
     DesiredCapacity Ref(:AsgDesired)
     MinSize Ref(:AsgMin)
     MaxSize Ref(:AsgMax)
-    VPCZoneIdentifier Ref(:SubnetIds)
+    VPCZoneIdentifiers Ref(:SubnetIds)
     LaunchTemplate({
       LaunchTemplateId: Ref(:LaunchTemplate),
       Version: FnGetAtt(:LaunchTemplate, :LatestVersionNumber)
