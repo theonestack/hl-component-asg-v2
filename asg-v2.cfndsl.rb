@@ -124,6 +124,10 @@ CloudFormation do
       default_alarm['namespace'] = 'AWS/EC2'
       default_alarm['evaluation_periods'] = '5' 
       default_alarm['MetricName'] = 'CPUReservation'
+      default_alarm['dimensions'] = [ {
+                                    Name: AutoScalingGroupName,
+                                    Value: Ref('AutoScaleGroup')
+                                } ]
       CloudWatch_Alarm(:ScaleUpAlarm) {
         Condition 'IsScalingEnabled'
         AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale up alarm"])
@@ -135,7 +139,7 @@ CloudFormation do
         Threshold asg_scaling['up']['threshold'].to_s
         AlarmActions [Ref(:ScaleUpPolicy)]
         ComparisonOperator 'GreaterThanThreshold'
-        Dimensions asg_scaling['up']['dimensions']
+        Dimensions asg_scaling['up']['dimensions'] || default_alarm['dimensions']
       }   
 
       CloudWatch_Alarm(:ScaleDownAlarm) {
@@ -149,7 +153,7 @@ CloudFormation do
         Threshold asg_scaling['down']['threshold'].to_s
         AlarmActions [Ref(:ScaleDownPolicy)]
         ComparisonOperator 'LessThanThreshold'
-        Dimensions asg_scaling['down']['dimensions']
+        Dimensions asg_scaling['down']['dimensions'] || default_alarm['dimensions']
       }   
     end
 
