@@ -9,7 +9,8 @@ CloudFormation do
 
   Condition(:SpotEnabled, FnEquals(Ref(:Spot), 'true'))
   Condition(:KeyPairSet, FnNot(FnEquals(Ref(:KeyPair), '')))
-    
+  Condition('IsScalingEnabled', FnEquals(Ref('EnableScaling'), 'true')) 
+
   ip_blocks = external_parameters.fetch(:ip_blocks, {})
   security_group_rules = external_parameters.fetch(:security_group_rules, [])
 
@@ -113,6 +114,67 @@ CloudFormation do
 
   suspend = asg_update_policy.has_key?('override_suspend') ? asg_update_policy['override_suspend'] : asg_update_policy['suspend']
 
+  if defined?(asg_scaling)
+
+    if asg_scaling.has_key?('up')
+
+      default_alarm = {}
+      default_alarm['statistic'] = 'Average'
+      default_alarm['cooldown'] = '60'
+      default_alarm['namespace'] = 'AWS/EC2'
+      default_alarm['evaluation_periods'] = '5' 
+      default_alarm['MetricName'] = 'CPUReservation'
+      default_alarm['dimensions'] = [ {
+                                    Name: AutoScalingGroupName,
+                                    Value: Ref('AutoScaleGroup')
+                                } ]
+      CloudWatch_Alarm(:ScaleUpAlarm) {
+        Condition 'IsScalingEnabled'
+        AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale up alarm"])
+        MetricName asg_scaling['up']['metric_name'] || default_alarm['MetricName']
+        Namespace asg_scaling['up']['namespace'] || default_alarm['namespace']
+        Statistic asg_scaling['up']['statistic'] || default_alarm['statistic']
+        Period (asg_scaling['up']['cooldown'] || default_alarm['cooldown']).to_s
+        EvaluationPeriods asg_scaling['up']['evaluation_periods'].to_s
+        Threshold asg_scaling['up']['threshold'].to_s
+        AlarmActions [Ref(:ScaleUpPolicy)]
+        ComparisonOperator 'GreaterThanThreshold'
+        Dimensions asg_scaling['up']['dimensions'] || default_alarm['dimensions']
+      }   
+
+      CloudWatch_Alarm(:ScaleDownAlarm) {
+        Condition 'IsScalingEnabled'
+        AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale down alarm"])
+        MetricName asg_scaling['down']['metric_name'] || default_alarm['MetricName']
+        Namespace asg_scaling['down']['namespace'] || default_alarm['namespace']
+        Statistic asg_scaling['down']['statistic'] || default_alarm['statistic']
+        Period (asg_scaling['down']['cooldown'] || default_alarm['cooldown']).to_s
+        EvaluationPeriods asg_scaling['down']['evaluation_periods'].to_s
+        Threshold asg_scaling['down']['threshold'].to_s
+        AlarmActions [Ref(:ScaleDownPolicy)]
+        ComparisonOperator 'LessThanThreshold'
+        Dimensions asg_scaling['down']['dimensions'] || default_alarm['dimensions']
+      }   
+    end
+
+    Resource("ScaleUpPolicy") {
+      Condition 'IsScalingEnabled'
+      Type 'AWS::AutoScaling::ScalingPolicy'
+      Property('AdjustmentType', 'ChangeInCapacity')
+      Property('AutoScalingGroupName', Ref('AutoScaleGroup'))
+      Property('Cooldown','300')
+      Property('ScalingAdjustment', asg_scaling['up']['adjustment'])
+    }
+
+    Resource("ScaleDownPolicy") {
+      Condition 'IsScalingEnabled'
+      Type 'AWS::AutoScaling::ScalingPolicy'
+      Property('AdjustmentType', 'ChangeInCapacity')
+      Property('AutoScalingGroupName', Ref('AutoScaleGroup'))
+      Property('Cooldown','300')
+      Property('ScalingAdjustment', asg_scaling['down']['adjustment'])
+    }
+  end
   AutoScaling_AutoScalingGroup(:AutoScaleGroup) {
     CreationPolicy(:AutoScalingCreationPolicy, {
       "MinSuccessfulInstancesPercent" => asg_create_policy['min_successful']
