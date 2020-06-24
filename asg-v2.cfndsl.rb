@@ -121,7 +121,7 @@ CloudFormation do
       default_alarm['statistic'] = 'Average'
       default_alarm['cooldown'] = '60'
       default_alarm['evaluation_periods'] = '5' 
-      default_alarm['MetricName'] = 'CPUReservation')
+      default_alarm['MetricName'] = 'CPUReservation'
       CloudWatch_Alarm(:ServiceScaleUpAlarm) {
         Condition 'IsScalingEnabled'
         AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale up alarm"])
