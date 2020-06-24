@@ -121,13 +121,14 @@ CloudFormation do
       default_alarm = {}
       default_alarm['statistic'] = 'Average'
       default_alarm['cooldown'] = '60'
+      default_alarm['namespace'] = 'AWS/EC2'
       default_alarm['evaluation_periods'] = '5' 
       default_alarm['MetricName'] = 'CPUReservation'
-      CloudWatch_Alarm(:ServiceScaleUpAlarm) {
+      CloudWatch_Alarm(:ScaleUpAlarm) {
         Condition 'IsScalingEnabled'
         AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale up alarm"])
         MetricName asg_scaling['up']['metric_name'] || default_alarm['MetricName']
-        Namespace asg_scaling['up']['namespace']
+        Namespace asg_scaling['up']['namespace'] || default_alarm['namespace']
         Statistic asg_scaling['up']['statistic'] || default_alarm['statistic']
         Period (asg_scaling['up']['cooldown'] || default_alarm['cooldown']).to_s
         EvaluationPeriods asg_scaling['up']['evaluation_periods'].to_s
@@ -137,10 +138,11 @@ CloudFormation do
         Dimensions asg_scaling['up']['dimensions']
       }   
 
-      CloudWatch_Alarm(:ServiceScaleDownAlarm) {
+      CloudWatch_Alarm(:ScaleDownAlarm) {
         Condition 'IsScalingEnabled'
         AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale down alarm"])
-        MetricName asg_scaling['up']['metric_name'] || default_alarm['MetricName']
+        MetricName asg_scaling['down']['metric_name'] || default_alarm['MetricName']
+        Namespace asg_scaling['down']['namespace'] || default_alarm['namespace']
         Namespace asg_scaling['down']['namespace']
         Statistic asg_scaling['down']['statistic'] || default_alarm['statistic']
         Period (asg_scaling['down']['cooldown'] || default_alarm['cooldown']).to_s
