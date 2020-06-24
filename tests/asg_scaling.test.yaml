@@ -1,0 +1,25 @@
+test_metadata:
+  type: config
+  name: asg_scaling
+  description: custom ASG create and update asg_scaling policies
+asg_scaling:        
+  up: 
+    cooldown: 300 
+    threshold: 40
+    evaluation_periods: 2
+    adjustment: 2
+    dimensions:
+      -   
+        Name: AutoScalingGroupName
+        Value: 
+          Ref: AutoScaleGroup
+  down:
+    cooldown: 300
+    threshold: 15
+    evaluation_periods: 2
+    adjustment: -1
+    dimensions:
+      -
+        Name: AutoScalingGroupName
+        Value: 
+          Ref: AutoScaleGroup
