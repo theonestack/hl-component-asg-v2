@@ -143,7 +143,6 @@ CloudFormation do
         AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale down alarm"])
         MetricName asg_scaling['down']['metric_name'] || default_alarm['MetricName']
         Namespace asg_scaling['down']['namespace'] || default_alarm['namespace']
-        Namespace asg_scaling['down']['namespace']
         Statistic asg_scaling['down']['statistic'] || default_alarm['statistic']
         Period (asg_scaling['down']['cooldown'] || default_alarm['cooldown']).to_s
         EvaluationPeriods asg_scaling['down']['evaluation_periods'].to_s
