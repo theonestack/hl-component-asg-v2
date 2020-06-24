@@ -9,7 +9,8 @@ CloudFormation do
 
   Condition(:SpotEnabled, FnEquals(Ref(:Spot), 'true'))
   Condition(:KeyPairSet, FnNot(FnEquals(Ref(:KeyPair), '')))
-    
+  Condition('IsScalingEnabled', FnEquals(Ref('EnableScaling'), 'true')) 
+
   ip_blocks = external_parameters.fetch(:ip_blocks, {})
   security_group_rules = external_parameters.fetch(:security_group_rules, [])
 
