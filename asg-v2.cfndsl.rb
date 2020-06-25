@@ -125,7 +125,7 @@ CloudFormation do
       default_alarm['evaluation_periods'] = '5' 
       default_alarm['MetricName'] = 'CPUReservation'
       default_alarm['dimensions'] = [ {
-                                    Name: AutoScalingGroupName,
+                                    Name: 'AutoScalingGroupName',
                                     Value: Ref('AutoScaleGroup')
                                 } ]
       CloudWatch_Alarm(:ScaleUpAlarm) {
