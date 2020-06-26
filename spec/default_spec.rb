@@ -134,7 +134,7 @@ describe 'compiled component' do
           "AutoScalingRollingUpdate" => {
             "MaxBatchSize"=>1, 
             "MinInstancesInService"=>0, 
-            "PauseTime"=>"PT0", 
+            "PauseTime"=>"PT05", 
             "SuspendProcesses"=>["HealthCheck", "ReplaceUnhealthy", "AZRebalance", "AlarmNotification", "ScheduledActions"],
             "WaitOnResourceSignals"=>"false"
           },

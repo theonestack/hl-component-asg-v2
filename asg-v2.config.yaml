@@ -15,7 +15,7 @@ asg_update_policy:
     - AZRebalance
     - AlarmNotification
     - ScheduledActions
-  pause_time: PT0S
+  pause_time: PT05
   wait_on_signals: 'false'
 
 iam_policies:
