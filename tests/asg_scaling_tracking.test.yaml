@@ -1,0 +1,22 @@
+test_metadata:
+    type: config
+    name: asg_scaling_tracking
+    description: custom ASG tracking scaling policies
+
+test_parameters:
+    LoadBalancer: myalb
+    TargetGroup: mytargetgroup
+    ALBRequestCountTargetValue: 300.0
+
+target_tracking:
+    AverageCPUTracking:
+        PredefinedMetricSpecification:
+            PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 60.0
+    RequestCountTracking:
+        PredefinedMetricSpecification:
+            PredefinedMetricType: ALBRequestCountPerTarget
+            ResourceLabel:
+                Fn::Sub: ${LoadBalancer}/${TargetGroup}
+        TargetValue:
+            Ref: ALBRequestCountTargetValue

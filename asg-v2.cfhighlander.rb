@@ -25,6 +25,7 @@ CfhighlanderTemplate do
     ComponentParam 'AsgMin', '1'
     ComponentParam 'AsgMax', '2'
     ComponentParam 'EnableScaling', 'false', allowedValues: ['true','false']
+    ComponentParam 'EnableTargetTrackingScaling', 'false', allowedValues: ['true','false']
 
     ComponentParam 'HealthCheckType', 'EC2', allowedValues: ['EC2','ELB'] 
     ComponentParam 'HealthCheckGracePeriod', '500'

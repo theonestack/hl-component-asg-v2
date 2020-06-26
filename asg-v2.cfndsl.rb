@@ -9,8 +9,9 @@ CloudFormation do
 
   Condition(:SpotEnabled, FnEquals(Ref(:Spot), 'true'))
   Condition(:KeyPairSet, FnNot(FnEquals(Ref(:KeyPair), '')))
-  Condition('IsScalingEnabled', FnEquals(Ref('EnableScaling'), 'true')) 
-
+  Condition('IsScalingEnabled', FnEquals(Ref('EnableScaling'), 'true'))
+  Condition('IsTargetTrackingScalingEnabled', FnEquals(Ref('EnableTargetTrackingScaling'), 'true')) 
+  
   ip_blocks = external_parameters.fetch(:ip_blocks, {})
   security_group_rules = external_parameters.fetch(:security_group_rules, [])
 
@@ -216,5 +217,15 @@ CloudFormation do
     end
   }
 
+  target_tracking = external_parameters.fetch(:target_tracking, {})
+
+  target_tracking.each do |name,config|
+    AutoScaling_ScalingPolicy(name) {
+      Condition 'IsTargetTrackingScalingEnabled'
+      AutoScalingGroupName Ref('AutoScaleGroup')
+      PolicyType 'TargetTrackingScaling'
+      TargetTrackingConfiguration config
+    }
+  end      
 
 end
