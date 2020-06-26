@@ -1,13 +1,14 @@
 test_metadata:
   type: config
-  name: asg_scaling
-  description: custom ASG create and update asg_scaling policies
-asg_scaling:        
+  name: asg_scaling_simple
+  description: custom ASG simple asg_scaling policies
+  
+asg_scaling:
   up: 
     cooldown: 60 
     threshold: 40
     evaluation_periods: 5
-    adjustment: 2
+    adjustment: 1
   down:
     cooldown: 300
     threshold: 15

@@ -113,68 +113,7 @@ CloudFormation do
   cool_down = external_parameters.fetch(:cool_down, nil)
 
   suspend = asg_update_policy.has_key?('override_suspend') ? asg_update_policy['override_suspend'] : asg_update_policy['suspend']
-
-  if defined?(asg_scaling)
-
-    if asg_scaling.has_key?('up')
-
-      default_alarm = {}
-      default_alarm['statistic'] = 'Average'
-      default_alarm['cooldown'] = '60'
-      default_alarm['namespace'] = 'AWS/EC2'
-      default_alarm['evaluation_periods'] = '5' 
-      default_alarm['MetricName'] = 'CPUReservation'
-      default_alarm['dimensions'] = [ {
-                                    Name: 'AutoScalingGroupName',
-                                    Value: Ref('AutoScaleGroup')
-                                } ]
-      CloudWatch_Alarm(:ScaleUpAlarm) {
-        Condition 'IsScalingEnabled'
-        AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale up alarm"])
-        MetricName asg_scaling['up']['metric_name'] || default_alarm['MetricName']
-        Namespace asg_scaling['up']['namespace'] || default_alarm['namespace']
-        Statistic asg_scaling['up']['statistic'] || default_alarm['statistic']
-        Period (asg_scaling['up']['cooldown'] || default_alarm['cooldown']).to_s
-        EvaluationPeriods asg_scaling['up']['evaluation_periods'].to_s
-        Threshold asg_scaling['up']['threshold'].to_s
-        AlarmActions [Ref(:ScaleUpPolicy)]
-        ComparisonOperator 'GreaterThanThreshold'
-        Dimensions asg_scaling['up']['dimensions'] || default_alarm['dimensions']
-      }   
-
-      CloudWatch_Alarm(:ScaleDownAlarm) {
-        Condition 'IsScalingEnabled'
-        AlarmDescription FnJoin(' ', [Ref('EnvironmentName'), "#{component_name} scale down alarm"])
-        MetricName asg_scaling['down']['metric_name'] || default_alarm['MetricName']
-        Namespace asg_scaling['down']['namespace'] || default_alarm['namespace']
-        Statistic asg_scaling['down']['statistic'] || default_alarm['statistic']
-        Period (asg_scaling['down']['cooldown'] || default_alarm['cooldown']).to_s
-        EvaluationPeriods asg_scaling['down']['evaluation_periods'].to_s
-        Threshold asg_scaling['down']['threshold'].to_s
-        AlarmActions [Ref(:ScaleDownPolicy)]
-        ComparisonOperator 'LessThanThreshold'
-        Dimensions asg_scaling['down']['dimensions'] || default_alarm['dimensions']
-      }   
-    end
-
-    Resource("ScaleUpPolicy") {
-      Condition 'IsScalingEnabled'
-      Type 'AWS::AutoScaling::ScalingPolicy'
-      Property('AdjustmentType', 'ChangeInCapacity')
-      Property('AutoScalingGroupName', Ref('AutoScaleGroup'))
-      Property('Cooldown','300')
-      Property('ScalingAdjustment', asg_scaling['up']['adjustment'])
-    }
-
-    Resource("ScaleDownPolicy") {
-      Condition 'IsScalingEnabled'
-      Type 'AWS::AutoScaling::ScalingPolicy'
-      Property('AdjustmentType', 'ChangeInCapacity')
-      Property('AutoScalingGroupName', Ref('AutoScaleGroup'))
-      Property('Cooldown','300')
-      Property('ScalingAdjustment', asg_scaling['down']['adjustment'])
-    }
-  end
+ 
   AutoScaling_AutoScalingGroup(:AutoScaleGroup) {
     CreationPolicy(:AutoScalingCreationPolicy, {
       "MinSuccessfulInstancesPercent" => asg_create_policy['min_successful']
@@ -208,10 +147,74 @@ CloudFormation do
     TerminationPolicies external_parameters[:termination_policies]
     Tags lanuch_asg_tags.each {|tag| tag[:PropagateAtLaunch]=false}
   }
-    
+
   Output(:AutoScalingGroupName) {
     Value(Ref(:AutoScaleGroup))
     Export FnSub("${EnvironmentName}-#{external_parameters[:component_name]}-AutoScalingGroupName")
   }
+
+  asg_scaling = external_parameters.fetch(:asg_scaling, {})
+  scale_up = asg_scaling.fetch('up', {})
+  scale_down = asg_scaling.fetch('down', {})
+  asg_dimensions = [{Name: 'AutoScalingGroupName', Value: Ref('AutoScaleGroup')}]
+
+  CloudWatch_Alarm(:ScaleUpAlarm) {
+    Condition 'IsScalingEnabled'
+    AlarmDescription FnSub(scale_up.fetch(:desc, "${EnvironmentName #{component_name} scale up alarm"))
+    MetricName scale_up.fetch(:metric_name, 'CPUReservation')
+    Namespace scale_up.fetch(:namespace, 'AWS/EC2')
+    Statistic scale_up.fetch(:statistic, 'Average')
+    Period scale_up.fetch(:cooldown, '60').to_s
+    EvaluationPeriods scale_up.fetch(:evaluation_periods, '5').to_s
+    Threshold scale_up.fetch(:threshold, '70').to_s
+    AlarmActions [Ref(:ScaleUpPolicy)]
+    ComparisonOperator scale_up.fetch(:operator, 'GreaterThanThreshold')
+    Dimensions scale_up.fetch(:dimensions, asg_dimensions)
+  }
+
+  CloudWatch_Alarm(:ScaleDownAlarm) {
+    Condition 'IsScalingEnabled'
+    AlarmDescription FnSub(scale_down.fetch(:desc, "${EnvironmentName #{component_name} scale down alarm"))
+    MetricName scale_down.fetch(:metric_name, 'CPUReservation')
+    Namespace scale_down.fetch(:namespace, 'AWS/EC2')
+    Statistic scale_down.fetch(:statistic, 'Average')
+    Period scale_down.fetch(:cooldown, '300').to_s
+    EvaluationPeriods scale_down.fetch(:evaluation_periods, '10').to_s
+    Threshold scale_down.fetch(:threshold, '40').to_s
+    AlarmActions [Ref(:ScaleDownPolicy)]
+    ComparisonOperator scale_down.fetch(:operator, 'LessThanThreshold')
+    Dimensions scale_down.fetch(:dimensions, asg_dimensions)
+  }
+
+  step_up_scaling = scale_up.fetch('step_adjustments', [])
+
+  AutoScaling_ScalingPolicy(:ScaleUpPolicy) {
+    Condition 'IsScalingEnabled'
+    AdjustmentType scale_up.fetch(:adjustment_type, 'ChangeInCapacity')
+    AutoScalingGroupName Ref('AutoScaleGroup')
+    Cooldown '300'
+    if step_up_scaling.any?
+      PolicyType 'StepScaling'
+      StepAdjustments step_up_scaling
+    else
+      ScalingAdjustment scale_up.fetch(:adjustment, 1)
+    end
+  }
+
+  step_down_scaling = scale_down.fetch('step_adjustments', [])
+
+  AutoScaling_ScalingPolicy(:ScaleDownPolicy) {
+    Condition 'IsScalingEnabled'
+    AdjustmentType 'ChangeInCapacity'
+    AutoScalingGroupName Ref('AutoScaleGroup')
+    Cooldown '300'
+    if step_down_scaling.any?
+      PolicyType 'StepScaling'
+      StepAdjustments step_down_scaling
+    else
+      ScalingAdjustment scale_down.fetch(:adjustment, -1)
+    end
+  }
+
 
 end

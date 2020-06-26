@@ -1,0 +1,25 @@
+test_metadata:
+  type: config
+  name: asg_scaling_step
+  description: custom ASG step scaling policies
+
+asg_scaling:
+  up: 
+    threshold: 70
+    evaluation_periods: 5
+    step_adjustments:
+    # Increase capacity by 1 when the value of the metric is greater than or equal to 70 percent but less than 85 percent
+    - MetricIntervalLowerBound: 0
+      MetricIntervalUpperBound: 15
+      ScalingAdjustment: 1
+    # Increase capacity by 2 when the value of the metric is greater than or equal to 85 percent but less than 95 percent
+    - MetricIntervalLowerBound: 15
+      MetricIntervalUpperBound: 25
+      ScalingAdjustment: 2
+    # Increase capacity by 3 when the value of the metric is greater than or equal to 95 percent
+    - MetricIntervalLowerBound: 25
+      ScalingAdjustment: 3
+  down:
+    threshold: 30
+    evaluation_periods: 5
+    adjustment: -1
