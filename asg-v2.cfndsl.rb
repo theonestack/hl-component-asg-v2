@@ -162,7 +162,7 @@ CloudFormation do
   CloudWatch_Alarm(:ScaleUpAlarm) {
     Condition 'IsScalingEnabled'
     AlarmDescription FnSub(scale_up.fetch('desc', "${EnvironmentName #{component_name} scale up alarm"))
-    MetricName scale_up.fetch('metric_name', 'CPUReservation')
+    MetricName scale_up.fetch('metric_name', 'CPUUtilization')
     Namespace scale_up.fetch('namespace', 'AWS/EC2')
     Statistic scale_up.fetch('statistic', 'Average')
     Period scale_up.fetch('period', '60').to_s
@@ -176,7 +176,7 @@ CloudFormation do
   CloudWatch_Alarm(:ScaleDownAlarm) {
     Condition 'IsScalingEnabled'
     AlarmDescription FnSub(scale_down.fetch('desc', "${EnvironmentName #{component_name} scale down alarm"))
-    MetricName scale_down.fetch('metric_name', 'CPUReservation')
+    MetricName scale_down.fetch('metric_name', 'CPUUtilization')
     Namespace scale_down.fetch('namespace', 'AWS/EC2')
     Statistic scale_down.fetch('statistic', 'Average')
     Period scale_down.fetch('period', '60').to_s

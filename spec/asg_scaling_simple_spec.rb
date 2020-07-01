@@ -21,7 +21,7 @@ describe 'compiled component' do
     let(:properties) { resource['Properties'] }
 
     it 'has property MetricName' do
-      expect(properties['MetricName']).to eq('CPUReservation')
+      expect(properties['MetricName']).to eq('CPUUtilization')
     end
 
     it 'has property Namespace' do
@@ -69,7 +69,7 @@ describe 'compiled component' do
     let(:properties) { resource['Properties'] }
 
     it 'has property MetricName' do
-      expect(properties['MetricName']).to eq('CPUReservation')
+      expect(properties['MetricName']).to eq('CPUUtilization')
     end
 
     it 'has property Namespace' do
