@@ -41,7 +41,7 @@ describe 'compiled component' do
     end
 
     it 'has property Threshold' do
-      expect(properties['Threshold']).to eq('70')
+      expect(properties['Threshold']).to eq('40')
     end
 
     it 'has property ComparisonOperator' do
@@ -81,15 +81,15 @@ describe 'compiled component' do
     end
 
     it 'has property Period' do
-      expect(properties['Period']).to eq('300')
+      expect(properties['Period']).to eq('60')
     end
 
     it 'has property EvaluationPeriods' do
-      expect(properties['EvaluationPeriods']).to eq('10')
+      expect(properties['EvaluationPeriods']).to eq('5')
     end
 
     it 'has property Threshold' do
-      expect(properties['Threshold']).to eq('40')
+      expect(properties['Threshold']).to eq('15')
     end
 
     it 'has property ComparisonOperator' do
@@ -125,11 +125,11 @@ describe 'compiled component' do
     end
 
     it 'has property Cooldown' do
-      expect(properties['Cooldown']).to eq('300')
+      expect(properties['Cooldown']).to eq('60')
     end
 
     it 'has property ScalingAdjustment' do
-      expect(properties['ScalingAdjustment']).to eq(1)
+      expect(properties['ScalingAdjustment']).to eq(2)
     end
 
   end
@@ -153,11 +153,11 @@ describe 'compiled component' do
     end
 
     it 'has property Cooldown' do
-      expect(properties['Cooldown']).to eq('300')
+      expect(properties['Cooldown']).to eq('60')
     end
 
     it 'has property ScalingAdjustment' do
-      expect(properties['ScalingAdjustment']).to eq(-1)
+      expect(properties['ScalingAdjustment']).to eq(-2)
     end
 
   end

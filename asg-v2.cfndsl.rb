@@ -161,44 +161,45 @@ CloudFormation do
 
   CloudWatch_Alarm(:ScaleUpAlarm) {
     Condition 'IsScalingEnabled'
-    AlarmDescription FnSub(scale_up.fetch(:desc, "${EnvironmentName #{component_name} scale up alarm"))
-    MetricName scale_up.fetch(:metric_name, 'CPUReservation')
-    Namespace scale_up.fetch(:namespace, 'AWS/EC2')
-    Statistic scale_up.fetch(:statistic, 'Average')
-    Period scale_up.fetch(:cooldown, '60').to_s
-    EvaluationPeriods scale_up.fetch(:evaluation_periods, '5').to_s
-    Threshold scale_up.fetch(:threshold, '70').to_s
+    AlarmDescription FnSub(scale_up.fetch('desc', "${EnvironmentName #{component_name} scale up alarm"))
+    MetricName scale_up.fetch('metric_name', 'CPUReservation')
+    Namespace scale_up.fetch('namespace', 'AWS/EC2')
+    Statistic scale_up.fetch('statistic', 'Average')
+    Period scale_up.fetch('period', '60').to_s
+    EvaluationPeriods scale_up.fetch('evaluation_periods', '5').to_s
+    Threshold scale_up.fetch('threshold', '70').to_s
     AlarmActions [Ref(:ScaleUpPolicy)]
-    ComparisonOperator scale_up.fetch(:operator, 'GreaterThanThreshold')
-    Dimensions scale_up.fetch(:dimensions, asg_dimensions)
+    ComparisonOperator scale_up.fetch('operator', 'GreaterThanThreshold')
+    Dimensions scale_up.fetch('dimensions', asg_dimensions)
   }
 
   CloudWatch_Alarm(:ScaleDownAlarm) {
     Condition 'IsScalingEnabled'
-    AlarmDescription FnSub(scale_down.fetch(:desc, "${EnvironmentName #{component_name} scale down alarm"))
-    MetricName scale_down.fetch(:metric_name, 'CPUReservation')
-    Namespace scale_down.fetch(:namespace, 'AWS/EC2')
-    Statistic scale_down.fetch(:statistic, 'Average')
-    Period scale_down.fetch(:cooldown, '300').to_s
-    EvaluationPeriods scale_down.fetch(:evaluation_periods, '10').to_s
-    Threshold scale_down.fetch(:threshold, '40').to_s
+    AlarmDescription FnSub(scale_down.fetch('desc', "${EnvironmentName #{component_name} scale down alarm"))
+    MetricName scale_down.fetch('metric_name', 'CPUReservation')
+    Namespace scale_down.fetch('namespace', 'AWS/EC2')
+    Statistic scale_down.fetch('statistic', 'Average')
+    Period scale_down.fetch('period', '60').to_s
+    EvaluationPeriods scale_down.fetch('evaluation_periods', '10').to_s
+    Threshold scale_down.fetch('threshold', '40').to_s
     AlarmActions [Ref(:ScaleDownPolicy)]
-    ComparisonOperator scale_down.fetch(:operator, 'LessThanThreshold')
-    Dimensions scale_down.fetch(:dimensions, asg_dimensions)
+    ComparisonOperator scale_down.fetch('operator', 'LessThanThreshold')
+    Dimensions scale_down.fetch('dimensions', asg_dimensions)
   }
 
   step_up_scaling = scale_up.fetch('step_adjustments', [])
 
   AutoScaling_ScalingPolicy(:ScaleUpPolicy) {
     Condition 'IsScalingEnabled'
-    AdjustmentType scale_up.fetch(:adjustment_type, 'ChangeInCapacity')
+    AdjustmentType scale_up.fetch('adjustment_type', 'ChangeInCapacity')
     AutoScalingGroupName Ref('AutoScaleGroup')
-    Cooldown '300'
     if step_up_scaling.any?
       PolicyType 'StepScaling'
       StepAdjustments step_up_scaling
+      EstimatedInstanceWarmup scale_up.fetch('warmup', 300).to_i
     else
-      ScalingAdjustment scale_up.fetch(:adjustment, 1)
+      Cooldown scale_up.fetch('cooldown', '300').to_s
+      ScalingAdjustment scale_up.fetch('adjustment', 1)
     end
   }
 
@@ -208,12 +209,13 @@ CloudFormation do
     Condition 'IsScalingEnabled'
     AdjustmentType 'ChangeInCapacity'
     AutoScalingGroupName Ref('AutoScaleGroup')
-    Cooldown '300'
     if step_down_scaling.any?
       PolicyType 'StepScaling'
       StepAdjustments step_down_scaling
+      EstimatedInstanceWarmup scale_up.fetch('warmup', 300).to_i
     else
-      ScalingAdjustment scale_down.fetch(:adjustment, -1)
+      Cooldown scale_up.fetch('cooldown', '300').to_s
+      ScalingAdjustment scale_down.fetch('adjustment', -1)
     end
   }
 
@@ -225,6 +227,7 @@ CloudFormation do
       AutoScalingGroupName Ref('AutoScaleGroup')
       PolicyType 'TargetTrackingScaling'
       TargetTrackingConfiguration config
+      EstimatedInstanceWarmup scale_up.fetch('warmup', 60).to_i
     }
   end      
 

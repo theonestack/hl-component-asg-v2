@@ -8,9 +8,9 @@ asg_scaling:
     cooldown: 60 
     threshold: 40
     evaluation_periods: 5
-    adjustment: 1
+    adjustment: 2
   down:
     cooldown: 300
     threshold: 15
     evaluation_periods: 5
-    adjustment: -1
+    adjustment: -2

@@ -7,6 +7,7 @@ asg_scaling:
   up: 
     threshold: 70
     evaluation_periods: 5
+    warmup: 120
     step_adjustments:
     # Increase capacity by 1 when the value of the metric is greater than or equal to 70 percent but less than 85 percent
     - MetricIntervalLowerBound: 0
