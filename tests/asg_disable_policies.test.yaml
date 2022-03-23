@@ -1,0 +1,8 @@
+test_metadata:
+  type: config
+  name: asg_disable_policies
+  description: disable ASG create and update asg_policies
+
+asg_create_policy: false
+
+asg_update_policy: false

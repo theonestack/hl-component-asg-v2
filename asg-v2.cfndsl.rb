@@ -113,26 +113,32 @@ CloudFormation do
   asg_update_policy = external_parameters[:asg_update_policy]
   cool_down = external_parameters.fetch(:cool_down, nil)
 
-  suspend = asg_update_policy.has_key?('override_suspend') ? asg_update_policy['override_suspend'] : asg_update_policy['suspend']
+  if asg_update_policy
+    suspend = asg_update_policy.has_key?('override_suspend') ? asg_update_policy['override_suspend'] : asg_update_policy['suspend']
+  end
  
   AutoScaling_AutoScalingGroup(:AutoScaleGroup) {
-    CreationPolicy(:AutoScalingCreationPolicy, {
-      "MinSuccessfulInstancesPercent" => asg_create_policy['min_successful']
-    })
-    CreationPolicy(:ResourceSignal, {
-      "Count" => asg_create_policy['count'],
-      "Timeout" => asg_create_policy['timeout']
-    })
-    UpdatePolicy(:AutoScalingRollingUpdate, {
-      "MinInstancesInService" => asg_update_policy['min'],
-      "MaxBatchSize"          => asg_update_policy['batch_size'],
-      "SuspendProcesses"      => suspend,
-      "PauseTime"             => asg_update_policy['pause_time'],
-      "WaitOnResourceSignals" => asg_update_policy['wait_on_signals']
-    })
-    UpdatePolicy(:AutoScalingScheduledAction, {
-      IgnoreUnmodifiedGroupSizeProperties: true
-    })
+    if asg_create_policy
+      CreationPolicy(:AutoScalingCreationPolicy, {
+        "MinSuccessfulInstancesPercent" => asg_create_policy['min_successful']
+      })
+      CreationPolicy(:ResourceSignal, {
+        "Count" => asg_create_policy['count'],
+        "Timeout" => asg_create_policy['timeout']
+      })
+    end
+    if asg_update_policy
+      UpdatePolicy(:AutoScalingRollingUpdate, {
+        "MinInstancesInService" => asg_update_policy['min'],
+        "MaxBatchSize"          => asg_update_policy['batch_size'],
+        "SuspendProcesses"      => suspend,
+        "PauseTime"             => asg_update_policy['pause_time'],
+        "WaitOnResourceSignals" => asg_update_policy['wait_on_signals']
+      })
+      UpdatePolicy(:AutoScalingScheduledAction, {
+        IgnoreUnmodifiedGroupSizeProperties: true
+      })
+    end
     Cooldown cool_down unless cool_down.nil?
     DesiredCapacity Ref(:AsgDesired)
     MinSize Ref(:AsgMin)
