@@ -51,3 +51,6 @@ termination_policies:
   # - NewestInstance
   # - OldestLaunchConfiguration
   # - ClosestToNextInstanceHour
+
+security_groups:
+  - Ref: SecurityGroupAsg

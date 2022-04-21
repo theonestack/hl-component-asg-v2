@@ -77,7 +77,7 @@ CloudFormation do
   asg_instance_tags.push(*instance_tags.map {|k,v| {Key: k, Value: FnSub(v)}})
   
   template_data = {
-    SecurityGroupIds: [ Ref(:SecurityGroupAsg) ],
+    SecurityGroupIds: external_parameters.fetch(:security_groups, []),
     TagSpecifications: [
       { ResourceType: 'instance', Tags: asg_instance_tags },
       { ResourceType: 'volume', Tags: asg_instance_tags }
