@@ -1,0 +1,12 @@
+test_metadata:
+  type: config
+  name: external_security_groups
+  description: tests adding external security groups to launch template
+
+test_parameters:
+  MySecurityGroup : sg-123
+
+security_groups:
+  - Ref: SecurityGroupAsg
+  - sg-01234567890abcdef
+  - Ref: MySecurityGroup
