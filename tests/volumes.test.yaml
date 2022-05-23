@@ -1,0 +1,19 @@
+test_metadata:
+  type: config
+  name: volumes
+  description: add additional volumes to the ec2 launch template
+
+volumes:
+  - DeviceName: /dev/sda1
+    Ebs:
+      Encrypted: true
+      VolumeSize: 100
+      VolumeType: gp3
+  - DeviceName: /dev/xvdc
+    VirtualName: ephemeral0
+  - DeviceName: /dev/xvdd
+    Ebs:
+      DeleteOnTermination: false
+      Encrypted: true
+      VolumeSize: 2000 
+      VolumeType: gp3

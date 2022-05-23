@@ -1,0 +1,12 @@
+test_metadata:
+  type: config
+  name: iam_policies
+  description: test adding additional iam policies to the ec2 iam role
+
+iam_policies:
+  ec2-describe-regions:
+    action:
+    - ec2:DescribeRegions
+
+managed_iam_policies:
+  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
