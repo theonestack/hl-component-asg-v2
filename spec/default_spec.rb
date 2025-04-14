@@ -1,6 +1,6 @@
 require 'yaml'
 
-describe 'compiled component' do
+describe 'compiled component asg-v2' do
   
   context 'cftest' do
     it 'compiles test' do
@@ -9,139 +9,279 @@ describe 'compiled component' do
   end
   
   let(:template) { YAML.load_file("#{File.dirname(__FILE__)}/../out/tests/default/asg-v2.compiled.yaml") }
+  
+  context "Resource" do
 
-  context 'Resource SecurityGroupAsg' do
+    
+    context "SecurityGroupAsg" do
+      let(:resource) { template["Resources"]["SecurityGroupAsg"] }
 
-    let(:properties) { template["Resources"]["SecurityGroupAsg"]["Properties"] }
-
-    it 'has property VpcId' do
-      expect(properties["VpcId"]).to eq({"Ref"=>"VPCId"})
-    end
-
-    it 'has property GroupDescription' do
-      expect(properties["GroupDescription"]).to eq({"Fn::Sub"=>"${EnvironmentName}-asg-v2"})
-    end
-
-
-    it 'has property Tags' do
-      expect(properties["Tags"]).to eq([
-        {"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}}, 
-        {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, 
-        {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
-    end
-
-  end
-
-  context 'Resource Role' do
-
-    let(:properties) { template["Resources"]["Role"]["Properties"] }
-
-    it 'has property Path' do
-      expect(properties["Path"]).to eq("/")
-    end
-
-    it 'has property AssumeRolePolicyDocument' do
-      expect(properties["AssumeRolePolicyDocument"]).to eq({"Version"=>"2012-10-17", "Statement"=>[{"Effect"=>"Allow", "Principal"=>{"Service"=>"ec2.amazonaws.com"}, "Action"=>"sts:AssumeRole"}]})
-    end
-
-    # it 'has property Policies' do
-    #   expect(properties["Policies"]).to eq([{"PolicyName"=>"ecs-container-instance", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"ecscontainerinstance", "Action"=>["ecs:CreateCluster", "ecs:DeregisterContainerInstance", "ecs:DiscoverPollEndpoint", "ecs:Poll", "ecs:RegisterContainerInstance", "ecs:StartTelemetrySession", "ecs:Submit*", "ecr:GetAuthorizationToken", "ecr:BatchCheckLayerAvailability", "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage", "logs:CreateLogStream", "logs:PutLogEvents"], "Resource"=>["*"], "Effect"=>"Allow"}]}}, {"PolicyName"=>"ecs-service-scheduler", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"ecsservicescheduler", "Action"=>["ec2:AuthorizeSecurityGroupIngress", "ec2:Describe*", "elasticloadbalancing:DeregisterInstancesFromLoadBalancer", "elasticloadbalancing:DeregisterTargets", "elasticloadbalancing:Describe*", "elasticloadbalancing:RegisterInstancesWithLoadBalancer", "elasticloadbalancing:RegisterTargets"], "Resource"=>["*"], "Effect"=>"Allow"}]}}])
-    # end
-
-    # it 'has property Tags' do
-    #   expect(properties["Tags"]).to eq([
-    #     {"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-ecs-v2"}}, 
-    #     {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, 
-    #     {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
-    # end
-
-  end
-
-  context 'Resource InstanceProfile' do
-
-    let(:properties) { template["Resources"]["InstanceProfile"]["Properties"] }
-
-    it 'has property Path' do
-      expect(properties["Path"]).to eq("/")
-    end
-
-    it 'has property Roles' do
-      expect(properties["Roles"]).to eq([{"Ref"=>"Role"}])
-    end
-
-  end
-
-  context 'Resource LaunchTemplate' do
-
-    let(:properties) { template["Resources"]["LaunchTemplate"]["Properties"] }
-    let(:userdata) { properties["LaunchTemplateData"]["UserData"]["Fn::Base64"]["Fn::Sub"] }
-
-    it 'has property LaunchTemplateData' do
-      expect(properties["LaunchTemplateData"]).to be_kind_of(Hash)
-    end
-
-    it 'has linux userdata' do
-      expect(userdata).to include("#!/bin/bash")
-    end
-
-  end
-
-  context 'Resource AutoScaleGroup' do
-
-    let(:properties) { template["Resources"]["AutoScaleGroup"]["Properties"] }
-
-    it 'has property DesiredCapacity' do
-      expect(properties["DesiredCapacity"]).to eq({"Ref"=>"AsgDesired"})
-    end
-
-    it 'has property MinSize' do
-      expect(properties["MinSize"]).to eq({"Ref"=>"AsgMin"})
-    end
-
-    it 'has property MaxSize' do
-      expect(properties["MaxSize"]).to eq({"Ref"=>"AsgMax"})
-    end
-
-    # it 'has property VPCZoneIdentifier' do
-    #   expect(properties["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
-    # end
-
-    it 'has property LaunchTemplate' do
-      expect(properties["LaunchTemplate"]).to eq({"LaunchTemplateId"=>{"Ref"=>"LaunchTemplate"}, "Version"=>{"Fn::GetAtt"=>["LaunchTemplate", "LatestVersionNumber"]}})
-    end
-
-    it 'has property Tags' do
-      expect(properties["Tags"]).to eq([
-        {"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}, "PropagateAtLaunch"=>false}, 
-        {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}, "PropagateAtLaunch"=>false}, 
-        {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}, "PropagateAtLaunch"=>false}])
-    end
-  end
-
-  context 'Resource AutoScaleGroup Polices' do
-
-    let(:asg) { template["Resources"]["AutoScaleGroup"] }
-
-      it 'has Creation Policy' do
-        expect(asg["CreationPolicy"]).to eq({
-          "AutoScalingCreationPolicy" => {"MinSuccessfulInstancesPercent"=>100},
-          "ResourceSignal" => {"Count"=>1, "Timeout"=>"PT10M"},
-        })
+      it "is of type AWS::EC2::SecurityGroup" do
+          expect(resource["Type"]).to eq("AWS::EC2::SecurityGroup")
       end
-
-      it 'has Update Policy' do
-        expect(asg["UpdatePolicy"]).to eq({
-          "AutoScalingRollingUpdate" => {
-            "MaxBatchSize"=>1, 
-            "MinInstancesInService"=>0, 
-            "PauseTime"=>"PT5M", 
-            "SuspendProcesses"=>["HealthCheck", "ReplaceUnhealthy", "AZRebalance", "AlarmNotification", "ScheduledActions"],
-            "WaitOnResourceSignals"=>"false"
-          },
-          "AutoScalingScheduledAction" => {"IgnoreUnmodifiedGroupSizeProperties"=>true}
-        })
+      
+      it "to have property VpcId" do
+          expect(resource["Properties"]["VpcId"]).to eq({"Ref"=>"VPCId"})
       end
+      
+      it "to have property GroupDescription" do
+          expect(resource["Properties"]["GroupDescription"]).to eq({"Fn::Sub"=>"${EnvironmentName}-asg-v2"})
+      end
+      
+      it "to have property Tags" do
+          expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
+      end
+      
+    end
+    
+    context "Role" do
+      let(:resource) { template["Resources"]["Role"] }
 
+      it "is of type AWS::IAM::Role" do
+          expect(resource["Type"]).to eq("AWS::IAM::Role")
+      end
+      
+      it "to have property Path" do
+          expect(resource["Properties"]["Path"]).to eq("/")
+      end
+      
+      it "to have property AssumeRolePolicyDocument" do
+          expect(resource["Properties"]["AssumeRolePolicyDocument"]).to eq({"Version"=>"2012-10-17", "Statement"=>[{"Effect"=>"Allow", "Principal"=>{"Service"=>"ec2.amazonaws.com"}, "Action"=>"sts:AssumeRole"}]})
+      end
+      
+      it "to have property Policies" do
+          expect(resource["Properties"]["Policies"]).to eq([{"PolicyName"=>"loadbalancer-manage", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"loadbalancermanage", "Action"=>["ec2:AuthorizeSecurityGroupIngress", "elasticloadbalancing:DeregisterInstancesFromLoadBalancer", "elasticloadbalancing:DeregisterTargets", "elasticloadbalancing:Describe*", "elasticloadbalancing:RegisterInstancesWithLoadBalancer", "elasticloadbalancing:RegisterTargets"], "Resource"=>["*"], "Effect"=>"Allow"}]}}, {"PolicyName"=>"ec2-describe", "PolicyDocument"=>{"Statement"=>[{"Sid"=>"ec2describe", "Action"=>["ec2:Describe*"], "Resource"=>["*"], "Effect"=>"Allow"}]}}])
+      end
+      
+      it "to have property Tags" do
+          expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}])
+      end
+      
+    end
+    
+    context "InstanceProfile" do
+      let(:resource) { template["Resources"]["InstanceProfile"] }
+
+      it "is of type AWS::IAM::InstanceProfile" do
+          expect(resource["Type"]).to eq("AWS::IAM::InstanceProfile")
+      end
+      
+      it "to have property Path" do
+          expect(resource["Properties"]["Path"]).to eq("/")
+      end
+      
+      it "to have property Roles" do
+          expect(resource["Properties"]["Roles"]).to eq([{"Ref"=>"Role"}])
+      end
+      
+    end
+    
+    context "LaunchTemplate" do
+      let(:resource) { template["Resources"]["LaunchTemplate"] }
+
+      it "is of type AWS::EC2::LaunchTemplate" do
+          expect(resource["Type"]).to eq("AWS::EC2::LaunchTemplate")
+      end
+      
+      it "to have property LaunchTemplateData" do
+          expect(resource["Properties"]["LaunchTemplateData"]).to eq({"SecurityGroupIds"=>[{"Ref"=>"SecurityGroupAsg"}], "TagSpecifications"=>[{"ResourceType"=>"instance", "Tags"=>[{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}, {"Key"=>"Role", "Value"=>{"Fn::Sub"=>"${RoleName}"}}, {"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-xx"}}]}, {"ResourceType"=>"volume", "Tags"=>[{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}}, {"Key"=>"Role", "Value"=>{"Fn::Sub"=>"${RoleName}"}}, {"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-xx"}}]}], "UserData"=>{"Fn::Base64"=>{"Fn::Sub"=>"#!/bin/bash\nhostname ${EnvironmentName}-${RoleName}-`/opt/aws/bin/ec2-metadata --instance-id|/usr/bin/awk '{print $2}'`\nsed '/HOSTNAME/d' /etc/sysconfig/network > /tmp/network && mv -f /tmp/network /etc/sysconfig/network && echo \"HOSTNAME=${EnvironmentName}-`/opt/aws/bin/ec2-metadata --instance-id|/usr/bin/awk '{print $2}'`\" >>/etc/sysconfig/network && /etc/init.d/network restart\n"}}, "IamInstanceProfile"=>{"Name"=>{"Ref"=>"InstanceProfile"}}, "KeyName"=>{"Fn::If"=>["KeyPairSet", {"Ref"=>"KeyPair"}, {"Ref"=>"AWS::NoValue"}]}, "ImageId"=>{"Ref"=>"Ami"}, "InstanceType"=>{"Ref"=>"InstanceType"}, "InstanceMarketOptions"=>{"Fn::If"=>["SpotEnabled", {"MarketType"=>"spot", "SpotOptions"=>{"SpotInstanceType"=>"one-time"}}, {"Ref"=>"AWS::NoValue"}]}})
+      end
+      
+    end
+    
+    context "AutoScaleGroup" do
+      let(:resource) { template["Resources"]["AutoScaleGroup"] }
+
+      it "is of type AWS::AutoScaling::AutoScalingGroup" do
+          expect(resource["Type"]).to eq("AWS::AutoScaling::AutoScalingGroup")
+      end
+      
+      it "to have property DesiredCapacity" do
+          expect(resource["Properties"]["DesiredCapacity"]).to eq({"Ref"=>"AsgDesired"})
+      end
+      
+      it "to have property MinSize" do
+          expect(resource["Properties"]["MinSize"]).to eq({"Ref"=>"AsgMin"})
+      end
+      
+      it "to have property MaxSize" do
+          expect(resource["Properties"]["MaxSize"]).to eq({"Ref"=>"AsgMax"})
+      end
+      
+      it "to have property VPCZoneIdentifier" do
+          expect(resource["Properties"]["VPCZoneIdentifier"]).to eq({"Ref"=>"SubnetIds"})
+      end
+      
+      it "to have property LaunchTemplate" do
+          expect(resource["Properties"]["LaunchTemplate"]).to eq({"LaunchTemplateId"=>{"Ref"=>"LaunchTemplate"}, "Version"=>{"Fn::GetAtt"=>["LaunchTemplate", "LatestVersionNumber"]}})
+      end
+      
+      it "to have property HealthCheckGracePeriod" do
+          expect(resource["Properties"]["HealthCheckGracePeriod"]).to eq({"Ref"=>"HealthCheckGracePeriod"})
+      end
+      
+      it "to have property HealthCheckType" do
+          expect(resource["Properties"]["HealthCheckType"]).to eq({"Ref"=>"HealthCheckType"})
+      end
+      
+      it "to have property TerminationPolicies" do
+          expect(resource["Properties"]["TerminationPolicies"]).to eq(["Default"])
+      end
+      
+      it "to have property Tags" do
+          expect(resource["Properties"]["Tags"]).to eq([{"Key"=>"Name", "Value"=>{"Fn::Sub"=>"${EnvironmentName}-asg-v2"}, "PropagateAtLaunch"=>false}, {"Key"=>"Environment", "Value"=>{"Ref"=>"EnvironmentName"}, "PropagateAtLaunch"=>false}, {"Key"=>"EnvironmentType", "Value"=>{"Ref"=>"EnvironmentType"}, "PropagateAtLaunch"=>false}])
+      end
+      
+    end
+    
+    context "ScaleUpAlarm" do
+      let(:resource) { template["Resources"]["ScaleUpAlarm"] }
+
+      it "is of type AWS::CloudWatch::Alarm" do
+          expect(resource["Type"]).to eq("AWS::CloudWatch::Alarm")
+      end
+      
+      it "to have property AlarmDescription" do
+          expect(resource["Properties"]["AlarmDescription"]).to eq({"Fn::Sub"=>"${EnvironmentName asg-v2 scale up alarm"})
+      end
+      
+      it "to have property MetricName" do
+          expect(resource["Properties"]["MetricName"]).to eq("CPUUtilization")
+      end
+      
+      it "to have property Namespace" do
+          expect(resource["Properties"]["Namespace"]).to eq("AWS/EC2")
+      end
+      
+      it "to have property Statistic" do
+          expect(resource["Properties"]["Statistic"]).to eq("Average")
+      end
+      
+      it "to have property Period" do
+          expect(resource["Properties"]["Period"]).to eq("60")
+      end
+      
+      it "to have property EvaluationPeriods" do
+          expect(resource["Properties"]["EvaluationPeriods"]).to eq("5")
+      end
+      
+      it "to have property Threshold" do
+          expect(resource["Properties"]["Threshold"]).to eq("70")
+      end
+      
+      it "to have property AlarmActions" do
+          expect(resource["Properties"]["AlarmActions"]).to eq([{"Ref"=>"ScaleUpPolicy"}])
+      end
+      
+      it "to have property ComparisonOperator" do
+          expect(resource["Properties"]["ComparisonOperator"]).to eq("GreaterThanThreshold")
+      end
+      
+      it "to have property Dimensions" do
+          expect(resource["Properties"]["Dimensions"]).to eq([{"Name"=>"AutoScalingGroupName", "Value"=>{"Ref"=>"AutoScaleGroup"}}])
+      end
+      
+    end
+    
+    context "ScaleDownAlarm" do
+      let(:resource) { template["Resources"]["ScaleDownAlarm"] }
+
+      it "is of type AWS::CloudWatch::Alarm" do
+          expect(resource["Type"]).to eq("AWS::CloudWatch::Alarm")
+      end
+      
+      it "to have property AlarmDescription" do
+          expect(resource["Properties"]["AlarmDescription"]).to eq({"Fn::Sub"=>"${EnvironmentName asg-v2 scale down alarm"})
+      end
+      
+      it "to have property MetricName" do
+          expect(resource["Properties"]["MetricName"]).to eq("CPUUtilization")
+      end
+      
+      it "to have property Namespace" do
+          expect(resource["Properties"]["Namespace"]).to eq("AWS/EC2")
+      end
+      
+      it "to have property Statistic" do
+          expect(resource["Properties"]["Statistic"]).to eq("Average")
+      end
+      
+      it "to have property Period" do
+          expect(resource["Properties"]["Period"]).to eq("60")
+      end
+      
+      it "to have property EvaluationPeriods" do
+          expect(resource["Properties"]["EvaluationPeriods"]).to eq("10")
+      end
+      
+      it "to have property Threshold" do
+          expect(resource["Properties"]["Threshold"]).to eq("40")
+      end
+      
+      it "to have property AlarmActions" do
+          expect(resource["Properties"]["AlarmActions"]).to eq([{"Ref"=>"ScaleDownPolicy"}])
+      end
+      
+      it "to have property ComparisonOperator" do
+          expect(resource["Properties"]["ComparisonOperator"]).to eq("LessThanThreshold")
+      end
+      
+      it "to have property Dimensions" do
+          expect(resource["Properties"]["Dimensions"]).to eq([{"Name"=>"AutoScalingGroupName", "Value"=>{"Ref"=>"AutoScaleGroup"}}])
+      end
+      
+    end
+    
+    context "ScaleUpPolicy" do
+      let(:resource) { template["Resources"]["ScaleUpPolicy"] }
+
+      it "is of type AWS::AutoScaling::ScalingPolicy" do
+          expect(resource["Type"]).to eq("AWS::AutoScaling::ScalingPolicy")
+      end
+      
+      it "to have property AdjustmentType" do
+          expect(resource["Properties"]["AdjustmentType"]).to eq("ChangeInCapacity")
+      end
+      
+      it "to have property AutoScalingGroupName" do
+          expect(resource["Properties"]["AutoScalingGroupName"]).to eq({"Ref"=>"AutoScaleGroup"})
+      end
+      
+      it "to have property Cooldown" do
+          expect(resource["Properties"]["Cooldown"]).to eq("300")
+      end
+      
+      it "to have property ScalingAdjustment" do
+          expect(resource["Properties"]["ScalingAdjustment"]).to eq(1)
+      end
+      
+    end
+    
+    context "ScaleDownPolicy" do
+      let(:resource) { template["Resources"]["ScaleDownPolicy"] }
+
+      it "is of type AWS::AutoScaling::ScalingPolicy" do
+          expect(resource["Type"]).to eq("AWS::AutoScaling::ScalingPolicy")
+      end
+      
+      it "to have property AdjustmentType" do
+          expect(resource["Properties"]["AdjustmentType"]).to eq("ChangeInCapacity")
+      end
+      
+      it "to have property AutoScalingGroupName" do
+          expect(resource["Properties"]["AutoScalingGroupName"]).to eq({"Ref"=>"AutoScaleGroup"})
+      end
+      
+      it "to have property Cooldown" do
+          expect(resource["Properties"]["Cooldown"]).to eq("300")
+      end
+      
+      it "to have property ScalingAdjustment" do
+          expect(resource["Properties"]["ScalingAdjustment"]).to eq(-1)
+      end
+      
+    end
+    
   end
 
 end
