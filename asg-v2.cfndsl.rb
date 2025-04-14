@@ -61,7 +61,7 @@ CloudFormation do
     })
   }
     
-  InstanceProfile(:InstanceProfile) {
+  IAM_InstanceProfile(:InstanceProfile) {
     Path '/'
     Roles [Ref(:Role)]
   }
